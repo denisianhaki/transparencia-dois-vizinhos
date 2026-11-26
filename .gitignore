@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+
+# Dados brutos e planilhas locais (evita subir arquivos pesados ou sensíveis por engano)
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+*.csv
+*.xlsx
+*.xls
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
