@@ -95,6 +95,61 @@ def audit_folha(df_folha: pd.DataFrame, cfg: dict[str, Any], alerts: list[dict[s
                 " | ".join(f"{x['Matricula']} [{x['Vinculo']}] {x['Cargo']}" for _, x in grp.iterrows()),
             )
 
+    # 6. Indícios de desvio de função / lotação atípica (quando LocalTrabalho está disponível)
+    if "LocalTrabalho" in df_folha.columns:
+        sup_col = df_folha["Supervisor"] if "Supervisor" in df_folha.columns else pd.Series("", index=df_folha.index)
+        # 6a. Professores/Educadores em áreas administrativas/marketing/desenvolvimento econômico
+        prof_desvio = df_folha[
+            df_folha["Cargo"].str.contains(r"Prof|Educador", case=False, regex=True)
+            & ~df_folha["LocalTrabalho"].str.contains(
+                r"ESCOLA|CMEI|EDUC|ENSINO|CULTURA|ESPORTE|CRAS|CREAS|AABB", case=False, regex=True
+            )
+            & (df_folha["LocalTrabalho"].str.strip() != "")
+        ]
+        for idx, r in prof_desvio.iterrows():
+            _add_alert(
+                alerts, "Desvio/Lotação", "Alta" if r["Gratificacoes"] > 0 else "Media",
+                "Docente/Educador lotado fora da Educação/Cultura/Assistência",
+                f"{r['Matricula']} - {r['Nome']}", r["LocalTrabalho"], float(r["TotalVantagens"]),
+                f"Cargo: {r['Cargo']} | Sup: {sup_col.loc[idx]} | Grat: R$ {r['Gratificacoes']:,.2f}",
+            )
+
+        # 6b. ACS alocado em Pronto Atendimento / fora de PSF/UBS
+        acs_desvio = df_folha[
+            df_folha["Cargo"].str.contains(r"Agente Comunit|ACS", case=False, regex=True)
+            & df_folha["LocalTrabalho"].str.contains(r"PRONTO ATENDIMENTO|UPA|GABINETE|ADMINISTRA", case=False, regex=True)
+        ]
+        for _, r in acs_desvio.iterrows():
+            _add_alert(
+                alerts, "Desvio/Lotação", "Media",
+                "ACS alocado em unidade de urgência/administrativa (fora de território PSF/UBS)",
+                f"{r['Matricula']} - {r['Nome']}", r["LocalTrabalho"], float(r["TotalVantagens"]),
+                f"Cargo: {r['Cargo']} | Grat: R$ {r['Gratificacoes']:,.2f}",
+            )
+
+        # 6c. Servidores cedidos com ônus
+        cedidos = df_folha[df_folha["Vinculo"] == "Cedido com ônus"]
+        for idx, r in cedidos.iterrows():
+            _add_alert(
+                alerts, "Desvio/Lotação", "Media",
+                "Servidor cedido com ônus para órgão/entidade externa",
+                f"{r['Matricula']} - {r['Nome']}", r["LocalTrabalho"], float(r["TotalVantagens"]),
+                f"Cargo: {r['Cargo']} | Sup: {sup_col.loc[idx]}",
+            )
+
+        # 6d. Cargos operacionais em Gabinete/Planejamento/Administração/Fazenda
+        op_adm = df_folha[
+            df_folha["Cargo"].str.contains(r"Operario|Servente|Motorista|Artifice|Mecanico", case=False, regex=True)
+            & df_folha["LocalTrabalho"].str.contains(r"GABINETE|ADMINISTRA|PLANEJAMENTO|FAZENDA|TRIBUTA", case=False, regex=True)
+        ]
+        for idx, r in op_adm.iterrows():
+            _add_alert(
+                alerts, "Desvio/Lotação", "Baixa",
+                "Cargo operacional lotado em secretaria meio/gabinete",
+                f"{r['Matricula']} - {r['Nome']}", r["LocalTrabalho"], float(r["TotalVantagens"]),
+                f"Cargo: {r['Cargo']} | Sup: {sup_col.loc[idx]}",
+            )
+
     return {
         "total_registros": int(len(df_folha)),
         "total_vantagens": float(df_folha["TotalVantagens"].sum()),
