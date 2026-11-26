@@ -1,0 +1,21 @@
+{
+  "municipio": "Dois Vizinhos - PR",
+  "competencia_folha": "2026-09",
+  "regras_folha": {
+    "percentual_alerta_hora_extra": 40.0,
+    "cargos_acumulaveis_regex": "Prof|Educador|Fisioterapeuta|Medico|Enfermeiro",
+    "alertar_licenca_com_gratificacao": true
+  },
+  "regras_diarias": {
+    "alertar_empenho_apos_viagem": true,
+    "min_empenhos_politico_alerta": 10,
+    "min_valor_politico_alerta": 10000.0,
+    "min_diarias_motorista_alerta": 150.0
+  },
+  "regras_compras": {
+    "teto_dispensa_servicos_compras": 62725.59,
+    "teto_dispensa_obras_engenharia": 125451.15,
+    "alerta_concentracao_fornecedor_pct": 10.0,
+    "alerta_acrescimo_contratado_pct": 4.0
+  }
+}

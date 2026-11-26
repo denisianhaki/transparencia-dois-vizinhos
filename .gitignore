@@ -5,15 +5,23 @@ __pycache__/
 .venv/
 venv/
 env/
+.pytest_cache/
 
-# Dados brutos e planilhas locais (evita subir arquivos pesados ou sensíveis por engano)
-data/raw/*
+# Dados brutos e processados (CSVs/planilhas locais)
+data/raw/**
+!data/raw/
+!data/raw/**/.gitkeep
 !data/raw/.gitkeep
-data/processed/*
+data/processed/**
+!data/processed/
 !data/processed/.gitkeep
 *.csv
 *.xlsx
 *.xls
+
+# Relatórios gerados automaticamente
+reports/*
+!reports/.gitkeep
 
 # OS / Editor
 .DS_Store
